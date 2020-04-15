@@ -1,0 +1,81 @@
+<?php include_once $_SERVER['DOCUMENT_ROOT'].'/config/ircddblocal.php';
+include_once $_SERVER['DOCUMENT_ROOT'].'/config/language.php';	      // Translation Code
+$configs = array();
+
+if ($configfile = fopen($gatewayConfigPath,'r')) {
+        while ($line = fgets($configfile)) {
+                list($key,$value) = explode("=",$line);
+                $value = trim(str_replace('"','',$value));
+                if ($key != 'ircddbPassword' && strlen($value) > 0)
+                $configs[$key] = $value;
+        }
+
+}
+$progname = basename($_SERVER['SCRIPT_FILENAME'],".php");
+$rev="20141101";
+$MYCALL=strtoupper($callsign);
+?>
+<?php
+$cpuLoad = sys_getloadavg();
+$cpuTempCRaw = exec('cat /sys/class/thermal/thermal_zone0/temp');
+if ($cpuTempCRaw > 1000) { $cpuTempC = round($cpuTempCRaw / 1000, 1); } else { $cpuTempC = round($cpuTempCRaw, 1); }
+$cpuTempF = round(+$cpuTempC * 9 / 5 + 32, 1);
+if ($cpuTempC < 50) { $cpuTempHTML = "<td style=\"background: #1d1\">".$cpuTempC."&deg;C / ".$cpuTempF."&deg;F</td>\n"; }
+if ($cpuTempC >= 50) { $cpuTempHTML = "<td style=\"background: #fa0\">".$cpuTempC."&deg;C / ".$cpuTempF."&deg;F</td>\n"; }
+if ($cpuTempC >= 69) { $cpuTempHTML = "<td style=\"background: #f00\">".$cpuTempC."&deg;C / ".$cpuTempF."&deg;F</td>\n"; }
+?>
+<br />
+<b><?php echo $lang['hardware_info'];?></b>
+
+<table style="table-layout: fixed;">
+  <tr>
+    <th><a class="tooltip" href="#"><?php echo $lang['hostname'];?><br /><span><b>System IP Address:<br /><?php echo str_replace(',', ',<br />', exec('hostname -I'));?></b></span></a></th>
+    <th><a class="tooltip" href="#"><?php echo $lang['kernel'];?><span><b>Release</b></span></a></th>
+  </tr>
+  <tr>
+    <td><?php echo php_uname('n');?></td>
+    <td><?php echo php_uname('r');?></td>
+  </tr>
+  <tr>
+     <th colspan="2"><a class="tooltip" href="#"><?php echo $lang['platform'];?><span><b>Uptime:<br /><?php echo str_replace(',', ',<br />', exec('uptime -p'));?></b></span></a></th>
+  </tr>
+  <tr>
+    <td colspan="2"><?php echo exec('platformDetect.sh');?></td>
+  </tr>
+  <tr>
+  <th><a class="tooltip" href="#"><?php echo $lang['cpu_load'];?><span><b>CPU Load</b></span></a></th>
+    <th><a class="tooltip" href="#"><?php echo $lang['cpu_temp'];?><span><b>CPU Temp</b></span></a></th>
+  </tr>
+  <tr>
+    <td align="center"><?php echo $cpuLoad[0];?> / <?php echo $cpuLoad[1];?> / <?php echo $cpuLoad[2];?></td>
+    <?php echo $cpuTempHTML; ?>
+  </tr>
+  <tr>
+    <th colspan="2" align="center"><?php echo $lang['service_status'];?></th>
+  </tr>
+  <tr>
+    <td style="background: #<?php exec ("pgrep MMDVMHost", $mmdvmhostpid); if (!empty($mmdvmhostpid)) { echo "1d1"; } else { echo "b55"; } ?>">MMDVMHost</td>
+    <td style="background: #<?php exec ("pgrep DMRGateway", $dmrgatewaypid); if (!empty($dmrgatewaypid)) { echo "1d1"; } else { echo "b55"; } ?>">DMRGateway</td>
+  </tr>
+  <tr>
+	<td style="background: #<?php exec ("pgrep YSFGateway", $ysfgatewaypid); if (!empty($ysfgatewaypid)) { echo "1d1"; } else { echo "b55"; } ?>">YSFGateway</td>
+    <td style="background: #<?php exec ("pgrep YSFParrot", $ysfparrotpid); if (!empty($ysfparrotpid)) { echo "1d1"; } else { echo "b55"; } ?>">YSFParrot</td>
+  </tr>
+  <tr>
+	<td style="background: #<?php exec ("pgrep P25Gateway", $p25gatewaypid); if (!empty($p25gatewaypid)) { echo "1d1"; } else { echo "b55"; } ?>">P25Gateway</td>
+    <td style="background: #<?php exec ("pgrep P25Parrot", $p25parrotpid); if (!empty($p25parrotpid)) { echo "1d1"; } else { echo "b55"; } ?>">P25Parrot</td>
+  </tr>
+  <tr>
+	<td style="background: #<?php exec ("pgrep dstarrepeaterd", $dstarrepeaterpid); if (!empty($dstarrepeaterpid)) { echo "1d1"; } else { echo "b55"; } ?>">DStarRepeater</td>
+    <td style="background: #<?php exec ("pgrep ircddbgatewayd", $ircddbgatewaypid); if (!empty($ircddbgatewaypid)) { echo "1d1"; } else { echo "b55"; } ?>">ircDDBGateway</td>
+  </tr>
+  <tr>
+	<td style="background: #<?php exec ("pgrep timeserverd", $timeserverpid); if (!empty($timeserverpid)) { echo "1d1"; } else { echo "b55"; } ?>">TimeServer</td>
+    <td style="background: #<?php exec ("pgrep -f -a /usr/local/sbin/pistar-watchdog | sed '/pgrep/d'", $watchdogpid); if (!empty($watchdogpid)) { echo "1d1"; } else { echo "b55"; } ?>">PiStar-Watchdog</td>
+  </tr>
+    <tr>
+ <td style="background: #<?php exec ("pgrep -f -a /usr/local/sbin/pistar-remote | sed '/pgrep/d'", $remotepid); if (!empty($remotepid)) { echo "1d1"; } else { echo "b55"; } ?>">PiStar-Remote</td>
+    <td style="background: #<?php exec ("pgrep -f -a /usr/local/sbin/pistar-keeper | sed '/pgrep/d'", $keeperpid); if (!empty($keeperpid)) { echo "1d1"; } else { echo "b55"; } ?>">PiStar-Keeper</td>>
+  </tr>
+</table>
+<br />
